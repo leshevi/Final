@@ -1,0 +1,6 @@
+log_driver:
+  - json-file
+  - log-opts
+
+max_size: 10m
+max_file: 3

@@ -1,0 +1,70 @@
+---
+- name: Uninstall old versions
+  ansible.builtin.apt:
+    name:
+      - docker
+      - docker-engine
+      - docker.io
+      - containerd
+      - runc
+    state: absent
+    update_cache: true
+
+- name: Install packages
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    update_cache: true
+    state: present
+
+- name: Make keyrings dir
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    mode: '0755'
+    state: directory
+    owner: root
+
+- name: Add Dockers official GPG key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    keyring: /etc/apt/keyrings/docker.gpg
+    state: present
+
+- name: Add apt source
+  ansible.builtin.apt_repository:
+    repo: 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable'
+    state: present
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install the containerd
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+
+- name: Docker logrotate docker.json
+  ansible.builtin.template:
+    src: docker_daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - RerstartDocker
+
+- name: Add the user "{{ ansible_user }}"
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true

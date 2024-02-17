@@ -1,0 +1,9 @@
+{% macro comma(loop) %}
+{{ ',' if not loop.last else '' }}
+{%- endmacro -%}
+{
+    "log-driver": {% for item in log_driver %}"{{ item }}"{{ comma(loop) }}{% endfor %}: {
+    "max-size": "{{ max_size }}",
+    "max-file": "{{ max_file }}"
+    }
+}

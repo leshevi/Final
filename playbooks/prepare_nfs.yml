@@ -1,0 +1,7 @@
+---
+- name: NFS prepare
+  become: true
+  gather_facts: true
+  hosts: db
+  roles:
+    - prepare_nfs

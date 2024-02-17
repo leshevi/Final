@@ -1,0 +1,7 @@
+---
+ansible_user: "{{ lookup('env', 'CI_SSH_USERNAME') }}"
+
+mon_priv: "{{ lookup('env', 'MON_PRIV') }}"
+app0_priv: "{{ lookup('env', 'APP0_PRIV') }}"
+app1_priv: "{{ lookup('env', 'APP1_PRIV') }}"
+db_priv: "{{ lookup('env', 'DB_PRIV') }}"

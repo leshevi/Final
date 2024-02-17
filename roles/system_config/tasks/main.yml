@@ -1,0 +1,43 @@
+---
+- name: Sshd disable ipv6
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#AddressFamily any'
+    line: 'AddressFamily Inet'
+  notify:
+    - Reload sshd
+
+- name: Hard limit
+  ansible.builtin.lineinfile:
+    path: /etc/security/limits.conf
+    regexp: '^#<domain>.*<type>.*<item>.*<value>$'
+    insertafter: '<value>\n'
+    line: "*\t\thard\tnproc\t\t128000"
+
+- name: Soft limit
+  ansible.builtin.lineinfile:
+    path: /etc/security/limits.conf
+    regexp: '^#<domain>.*<type>.*<item>.*<value>$'
+    insertafter: '<value>\n'
+    line: "*\t\tsoft\tnproc\t\t128000"
+
+- name: Sysctl file
+  ansible.builtin.copy:
+    src: 99-sysctl.conf
+    dest: /etc/sysctl.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Reload sysctl
+
+- name: Disable swap
+  ansible.builtin.command: swapoff -a
+  changed_when: true
+  when: ansible_swaptotal_mb > 0
+
+- name: Remove swap from fstab
+  ansible.builtin.lineinfile:
+    path: '/etc/fstab'
+    regexp: '\sswap\s'
+    state: 'absent'

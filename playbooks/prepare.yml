@@ -1,0 +1,8 @@
+---
+- name: Setup and config soft
+  become: true
+  gather_facts: true
+  hosts: all
+  roles:
+    - install_software
+    - system_config

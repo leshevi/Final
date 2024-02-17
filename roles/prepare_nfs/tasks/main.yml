@@ -1,0 +1,37 @@
+---
+- name: Prepare mariadb
+  ansible.builtin.file:
+    path: /srv/mariadb
+    state: directory
+    mode: '0777'
+
+- name: Directory for NFS server
+  ansible.builtin.file:
+    path: /srv/NFS/wordpress
+    state: directory
+    owner: ansible
+    mode: '0777'
+
+- name: Update apt
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install NFS Server
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    update_cache: true
+    state: present
+  vars:
+    packages:
+      - nfs-kernel-server
+
+- name: Create exports file
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Export FS

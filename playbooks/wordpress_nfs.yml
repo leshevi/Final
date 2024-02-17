@@ -1,0 +1,7 @@
+---
+- name: Wodpress crete NFS cataloges
+  become: true
+  gather_facts: true
+  hosts: app
+  roles:
+    - wordpress_nfs

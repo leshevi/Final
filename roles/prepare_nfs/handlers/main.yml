@@ -1,0 +1,5 @@
+---
+- name: Export FS
+  ansible.builtin.command: exportfs -a
+  register: trust
+  changed_when: trust.rc != 0
