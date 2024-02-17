@@ -1,0 +1,10 @@
+---
+version: '3.9'
+
+services:
+  fluentbit:
+    image: fluent/fluent-bit:latest
+    command: /fluent-bit/bin/fluent-bit -i docker_events -t events -o opensearch -p Host=${OS_HOST} -p Port=9200 -p Suppress_Type_Name=On -p Index=docker -p Type=events -m '*'
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
