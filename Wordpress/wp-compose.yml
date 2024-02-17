@@ -1,0 +1,32 @@
+---
+version: '3.9'
+
+volumes:
+  wp_html:
+    driver: local
+    driver_opts:
+      type: "nfs4"
+      o: addr=${DB_PRIV},rw,hard,rsize=8192,wsize=8192,timeo=14,async
+      device: ":/srv/NFS/wordpress"
+
+services:
+  wordpress:
+    image: wordpress
+    restart: always
+    ports:
+      - 80:80
+    environment:
+      WORDPRESS_DB_HOST: ${DB_PRIV} 
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wpPa55
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wp_html:/var/www/html
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.50'
+          memory: 512M
