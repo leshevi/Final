@@ -1,0 +1,38 @@
+---
+version: '3.9'
+
+volumes:
+  mariadb:
+    name: mariadb
+    driver_opts:
+      type: local
+      device: '/srv/mariadb'
+      o: bind
+
+services:
+  mariadb:
+    ports:
+      - 3306:3306
+    image: mariadb:latest
+    environment:
+      TZ: Europe/Moscow
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD?Variable not set}
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wpPa55
+    volumes:
+      - type: volume
+        source: mariadb
+        target: /var/lib/mysql
+        volume:
+          nocopy: true
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.50'
+          memory: 512M
+
