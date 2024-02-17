@@ -1,0 +1,35 @@
+---
+version: '3.9'
+
+volumes:
+  prometheus_conf:
+    name: prometheus_conf
+    driver_opts:
+      type: local
+      device: '/srv/prometheus/conf'
+      o: bind
+
+  prometheus_data:
+    name: prometheus_data
+    driver_opts:
+      type: local
+      device: '/srv/prometheus/data'
+      o: bind
+
+services:
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    ports:
+      - 9090:9090
+    volumes:
+      - prometheus_conf:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=1d
+      - --storage.tsdb.path=/prometheus
+      - --web.listen-address=0.0.0.0:9090
+      - --web.external-url=http://${MON_PUB}:9090/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
