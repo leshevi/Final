@@ -1,0 +1,31 @@
+version: '3.9'
+
+volumes:
+  grafana_conf:
+    name: grafana_conf
+    driver_opts:
+      type: local
+      device: '/srv/grafana/conf'
+      o: bind
+
+  grafana_data:
+    name: grafana_data
+    driver_opts:
+      type: local
+      device: '/srv/grafana/data'
+      o: bind
+
+services:
+  grafana:
+    image: grafana/grafana
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: Aaa!!!-admin
+      GF_SERVER_DOMAIN: ${MON_PUB}
+      GF_SERVER_ROOT_URL: http://${MON_PUB}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    ports:
+      - 80:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - grafana_conf:/etc/grafana
