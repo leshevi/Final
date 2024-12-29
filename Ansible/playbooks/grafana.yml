@@ -1,0 +1,8 @@
+---
+
+- name: Grafana crete cataloges
+  become: true
+  gather_facts: true
+  hosts: mon
+  roles:
+    - grafana
