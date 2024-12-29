@@ -1,0 +1,26 @@
+stages:
+  - mariadb
+
+variables:
+   MARIADB_ROOT_PASSWORD: Pa55w0rd
+
+.job_inj:
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_ROOT_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && touch ~/.ssh/known_hosts
+    - ssh-keyscan -t ed25519 ${DB_PUB} >> ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${DB_PUB}"
+
+deploy_mariadb:
+  stage: mariadb
+  tags:
+    - Docker
+  when: manual
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - docker compose up -d
