@@ -1,0 +1,30 @@
+stages:
+  - deploy
+  - destroy
+
+.job_inj:
+  before_script:
+    - apk update && apk add openssh-client rsync
+    - eval $(ssh-agent -s)
+    - echo "$SSH_ROOT_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && touch ~/.ssh/known_hosts
+    - ssh-keyscan -t ed25519 ${MON_PUB} >> ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh
+    - sed -i "s!MON_PRIV!${MON_PRIV}!g" conf/prometheus.yml
+    - sed -i "s!APP0_PRIV!${APP0_PRIV}!g" conf/prometheus.yml 
+    - sed -i "s!APP1_PRIV!${APP1_PRIV}!g" conf/prometheus.yml
+    - sed -i "s!DB_PRIV!${DB_PRIV}!g" conf/prometheus.yml
+    - /usr/bin/rsync -atv --delete --progress conf/*.yml ${CI_SSH_USERNAME}@${MON_PUB}:/srv/prometheus/conf/
+
+prometheus:
+  stage: deploy
+  tags:
+    - Docker
+  when: manual
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${MON_PUB}"
+    - docker compose up -d
