@@ -1,0 +1,62 @@
+stages:
+  - fluentbit
+  - opensearch
+  - destroy
+
+variables:
+    OS_HOST:  192.168.200.30
+    FB0_HOST: 192.168.200.31
+    FB1_HOST: 192.168.200.32
+
+.job_inj:
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_ROOT_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && touch ~/.ssh/known_hosts
+    - ssh-keyscan -t ed25519 ${OS_HOST} ${APP0_PUB} ${APP1_PUB} >> ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh
+
+deploy_fluentbit:
+  stage: fluentbit
+  tags:
+    - Docker
+  when: manual
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP0_PUB}"
+    - docker compose -f fluentbit-compose.yml up -d
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP1_PUB}"
+    - docker compose -f fluentbit-compose.yml up -d
+
+opensearch_opensearch:
+  stage: opensearch
+  tags:
+    - Docker
+  when: manual
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${OS_HOST}"
+    - docker compose -f opensearch-compose.yml down
+
+stop_service:
+  stage: destroy
+  tags:
+    - Docker
+  when: manual
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP0_PUB}"
+    - docker compose -f fluentbit-compose.yml down
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP1_PUB}"
+    - docker compose -f fluentbit-compose.yml down
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${OS_HOST}"
+    - docker compose -f opensearch-compose.yml down
