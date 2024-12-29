@@ -1,0 +1,15 @@
+---
+
+- name: Directory for grafana conf
+  ansible.builtin.file:
+    path: /srv/grafana/conf
+    state: directory
+    owner: ansible
+    mode: "0777"
+
+- name: Directory for grafana data
+  ansible.builtin.file:
+    path: /srv/grafana/data
+    state: directory
+    owner: ansible
+    mode: "0777"
