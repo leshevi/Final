@@ -1,0 +1,50 @@
+---
+
+stages:
+  - node_exporter
+  - delete_node_exporter
+
+.job_inj:
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_ROOT_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && touch ~/.ssh/known_hosts
+    - ssh-keyscan -t ed25519 ${MON_PUB} ${APP0_PUB} ${APP1_PUB} ${DB_PUB} >> ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh
+
+deploy_node_exporter:
+  stage: node_exporter
+  tags:
+    - Docker
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${MON_PUB}"
+    - docker compose up -d
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP0_PUB}"
+    - docker compose up -d
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP1_PUB}"
+    - docker compose up -d
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${DB_PUB}"
+    - docker compose up -d
+
+destroy_node_exporter:
+  stage: delete_node_exporter
+  tags:
+    - Docker
+  when: manual
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${MON_PUB}"
+    - docker compose down
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP0_PUB}"
+    - docker compose down
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP1_PUB}"
+    - docker compose down
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${DB_PUB}"
+    - docker compose down
