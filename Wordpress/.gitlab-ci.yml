@@ -1,0 +1,47 @@
+---
+
+stages:
+  - wordpress
+  - delete_wordpress
+
+.job_inj:
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_ROOT_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && touch ~/.ssh/known_hosts
+    - ssh-keyscan -t ed25519 ${APP0_PUB} ${APP1_PUB} >> ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh
+
+deploy_wordpress:
+  stage: wordpress
+  tags:
+    - Docker
+  when: manual
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP0_PUB}"
+    - docker compose -f wp-compose.yml up -d
+    - unset DOCKER_HOST
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP1_PUB}"
+    - docker compose -f wp-compose.yml up -d
+    - unset DOCKER_HOST
+
+destroy_wordpress:
+  stage: delete_wordpress
+  tags:
+    - Docker
+  when: manual
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP0_PUB}"
+    - docker compose -f wp-compose.yml down
+    - unset DOCKER_HOST
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${APP1_PUB}"
+    - docker compose -f wp-compose.yml down
+    - unset DOCKER_HOST
