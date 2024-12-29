@@ -1,0 +1,17 @@
+---
+
+- name: Directory for prometheus conf
+  ansible.builtin.file:
+    path: /srv/prometheus/conf
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: "0777"
+
+- name: Directory for prometheus data
+  ansible.builtin.file:
+    path: /srv/prometheus/data
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: "0777"
