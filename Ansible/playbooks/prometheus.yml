@@ -1,0 +1,8 @@
+---
+
+- name: Prometheus crete cataloges
+  become: true
+  gather_facts: true
+  hosts: mon
+  roles:
+    - prometheus
