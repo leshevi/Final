@@ -1,0 +1,26 @@
+---
+stages:
+  - deploy
+  - destroy
+
+.job_inj:
+  before_script:
+    - apk update && apk add openssh-client rsync
+    - eval $(ssh-agent -s)
+    - echo "$SSH_ROOT_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && touch ~/.ssh/known_hosts
+    - ssh-keyscan -t ed25519 ${MON_PUB} >> ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh
+
+grafana:
+  stage: deploy
+  tags:
+    - Docker
+  when: manual
+  only:
+    refs:
+      - main
+  extends: .job_inj
+  script:
+    - export DOCKER_HOST="ssh://${CI_SSH_USERNAME}@${MON_PUB}"
+    - docker compose up -d
